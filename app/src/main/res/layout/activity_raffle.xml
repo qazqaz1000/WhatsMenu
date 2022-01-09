@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/lightgray"
-    tools:context=".MainActivity">
+    tools:context=".RaffleActivity">
 
     <FrameLayout
-        android:id="@+id/topview"
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:background="@color/gray"
@@ -20,27 +20,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="@string/topview_text"
             android:textSize="30sp"
-            />
+            android:text="@string/topview_today_menu" />
     </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/area_recyclerview"
+        android:id="@+id/restaurant_recyclerview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/bottomview"
-        app:layout_constraintTop_toBottomOf="@+id/topview"></androidx.recyclerview.widget.RecyclerView>
-
-    <View
-        android:id="@+id/bottomview"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/gray"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"></View>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout"></androidx.recyclerview.widget.RecyclerView>
+
+    <com.naver.maps.map.MapView
+        android:id="@+id/mapview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/restaurant_recyclerview">
+
+    </com.naver.maps.map.MapView>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
