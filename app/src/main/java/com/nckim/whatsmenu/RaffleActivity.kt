@@ -24,15 +24,12 @@ import com.naver.maps.map.util.FusedLocationSource
 
 //import kotlinx.android.synthetic.main.activity_main.*
 
-class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener{
+class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
     private lateinit var mapView: MapView
     private lateinit var naverMap : NaverMap
 
     lateinit var  restaurantAdapter : RestaurantAdapter
     val datas = mutableListOf<RestaurantData>()
-
-    private var mLatitude: Double = 0.0
-    private var mLongitude: Double = 0.0
 
     private var locationSource: FusedLocationSource? = null
 
@@ -53,62 +50,6 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
-    }
-
-    fun updateLatLng(){
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-
-
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-//        locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-
-        var gpsListener: LocationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                val latitude = location.latitude
-                val longitude = location.longitude
-                Log.d("Test2", "GPS Location changed, Latitude: $latitude" +
-                        ", Longitude: $longitude")
-            }
-
-            override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
-                Log.d("Test","d")
-            }
-            override fun onProviderEnabled(provider: String) {
-                Log.d("Test","f")
-            }
-            override fun onProviderDisabled(provider: String) {
-                Log.d("Test","65")
-            }
-        }
-
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10L, 1000* 60.0f, gpsListener)
-        if (checkLocationServicesStatus(locationManager)) {
-            val location: Location? =
-                locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            val ageMs = TimeUnit.NANOSECONDS.toMillis(
-                SystemClock.elapsedRealtimeNanos()
-                    - (location?.getElapsedRealtimeNanos() ?: 0)
-            )
-            Log.d("Test", "age : " + ageMs)
-            if (location != null) {
-                mLatitude = location.latitude
-                mLongitude = location.longitude
-                Log.d(
-                    "Test", "GPS Location changed, Latitude: $mLatitude" +
-                            ", Longitude: $mLongitude"
-                )
-            }
-        }
     }
 
 
@@ -169,20 +110,9 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
     override fun onMapReady(p0: NaverMap) {
         this.naverMap = p0
 
-        updateLatLng()
-//        val cameraPosition = CameraPosition(LatLng(mLatitude, mLongitude), 16.0)
-//        naverMap.cameraPosition=cameraPosition
-        locationSource = FusedLocationSource(this, 1001)
+        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
         naverMap.locationSource = locationSource
         ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
-    }
-
-    override fun onLocationChanged(p0: Location) {
-        Log.d(
-            "Test2", "GPS Location changed, Latitude: ${p0.latitude}" +
-                    ", Longitude: ${p0.longitude}"
-        )
-
     }
 
     override fun onRequestPermissionsResult(
