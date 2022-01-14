@@ -17,6 +17,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/today_menu_textbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -36,12 +37,25 @@
 
     <com.naver.maps.map.MapView
         android:id="@+id/mapview"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/restaurant_recyclerview">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/restaurant_recyclerview"
+        app:layout_constraintEnd_toStartOf="@+id/kakaoview">
 
     </com.naver.maps.map.MapView>
+
+    <RelativeLayout
+        android:id="@+id/kakaoview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mapview"
+        app:layout_constraintTop_toBottomOf="@+id/restaurant_recyclerview">
+
+    </RelativeLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

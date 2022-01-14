@@ -1,22 +1,20 @@
 package com.nckim.whatsmenu
 
 import android.Manifest
-import android.content.pm.PackageManager
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.PointF
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
 import com.nckim.whatsmenu.adapter.RestaurantAdapter
 import com.nckim.whatsmenu.data.RestaurantData
 import kotlinx.android.synthetic.main.activity_raffle.*
-import java.util.concurrent.TimeUnit
 import com.naver.maps.map.util.FusedLocationSource
 import java.io.*
 import java.lang.RuntimeException
@@ -26,15 +24,17 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLEncoder
 import android.os.StrictMode
-
-
-
+import android.view.View
+import com.nckim.whatsmenu.searchplace.SearchKeyword
+import com.nckim.whatsmenu.searchplace.SearchKeyword.SearchKeywordCallback
+import net.daum.mf.map.api.MapView as KakaoMap
 
 
 //import kotlinx.android.synthetic.main.activity_main.*
 
-class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
-    private lateinit var mapView: MapView
+class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapClickListener{
+
+    private lateinit var naverView: MapView
     private lateinit var naverMap : NaverMap
 
     lateinit var  restaurantAdapter : RestaurantAdapter
@@ -49,15 +49,42 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private lateinit var kakaoMap : KakaoMap
+
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_raffle)
+        today_menu_textbox.setOnClickListener(View.OnClickListener {
+            val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val location: Location? = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            val longitude: Double = location!!.getLongitude()
+            val latitude: Double = location!!.getLatitude()
+            SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 100,
+                object : SearchKeywordCallback {
+                    override fun resultCallback(result: String) {
+                        datas.clear()
+                        datas.apply {
+                            add(RestaurantData("양식", "asfasedwf"))
+                            add(RestaurantData("양식", "ff"))
+                            add(RestaurantData("한식", "12313"))
+                        }
 
+                        restaurantAdapter.datas = datas
+                        restaurantAdapter.notifyDataSetChanged()
+                    }
+                })
+
+        })
         initRestaurantRecyclerView()
 
-        mapView = findViewById(R.id.mapview)
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
+        naverView = findViewById(R.id.mapview)
+        naverView.onCreate(savedInstanceState)
+        naverView.getMapAsync(this)
+
+        kakaoMap = KakaoMap(this)
+        kakaoview.addView(kakaoMap)
+
     }
 
 
@@ -68,37 +95,37 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
 
     override fun onStart() {
         super.onStart()
-        mapView.onStart()
+        naverView.onStart()
     }
 
     override fun onResume() {
         super.onResume()
-        mapView.onResume()
+        naverView.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        mapView.onPause()
+        naverView.onPause()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        mapView.onSaveInstanceState(outState)
+        naverView.onSaveInstanceState(outState)
     }
 
     override fun onStop() {
         super.onStop()
-        mapView.onStop()
+        naverView.onStop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mapView.onDestroy()
+        naverView.onDestroy()
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        mapView.onLowMemory()
+        naverView.onLowMemory()
     }
 
     private fun initRestaurantRecyclerView() {
@@ -122,6 +149,8 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
         naverMap.locationSource = locationSource
         ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
     }
+
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -158,7 +187,7 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
         }
 
         val apiURL =
-            "https://openapi.naver.com/v1/search/blog?query=$text&display=10" // json 결과
+            "https://openapi.naver.com/v1/search/local.json?query=$text&display=10" // json 결과
 
         //String apiURL = "https://openapi.naver.com/v1/search/blog.xml?query="+ text; // xml 결과
 
@@ -215,5 +244,10 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback{
         } catch (e: IOException) {
             throw RuntimeException("API 응답을 읽는데 실패했습니다.", e)
         }
+    }
+
+    override fun onMapClick(p0: PointF, p1: LatLng) {
+
+        getRestaurant()
     }
 }

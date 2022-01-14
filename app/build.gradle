@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.nckim.whatsmenu"
         minSdk 24
-        targetSdk 31
+        targetSdk 26
         versionCode 1
         versionName "1.0"
 
@@ -33,7 +33,7 @@ android {
 }
 
 dependencies {
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
@@ -45,4 +45,8 @@ dependencies {
     // 네이버 지도 SDK
     implementation 'com.naver.maps:map-sdk:3.12.0'
     implementation 'com.google.android.gms:play-services-location:15.0.1'
+
+    //retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 }

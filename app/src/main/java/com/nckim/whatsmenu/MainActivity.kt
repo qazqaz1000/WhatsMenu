@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import com.nckim.whatsmenu.adapter.AreaAdapter
 import com.nckim.whatsmenu.data.AreaData
@@ -61,6 +62,8 @@ class MainActivity : AppCompatActivity() {
 
         areaAdapter.datas = datas
         areaAdapter.notifyDataSetChanged()
+
+        Log.e("Test" , JavaClass.getKeyHashBase64(this));
     }
 
     private fun requestPermission(){
