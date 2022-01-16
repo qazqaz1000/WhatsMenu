@@ -25,6 +25,7 @@ import java.net.URL
 import java.net.URLEncoder
 import android.os.StrictMode
 import android.view.View
+import com.nckim.whatsmenu.searchplace.ResultSearchKeyword
 import com.nckim.whatsmenu.searchplace.SearchKeyword
 import com.nckim.whatsmenu.searchplace.SearchKeyword.SearchKeywordCallback
 import net.daum.mf.map.api.MapView as KakaoMap
@@ -56,25 +57,7 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_raffle)
         today_menu_textbox.setOnClickListener(View.OnClickListener {
-            val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val location: Location? = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            val longitude: Double = location!!.getLongitude()
-            val latitude: Double = location!!.getLatitude()
-            SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 100,
-                object : SearchKeywordCallback {
-                    override fun resultCallback(result: String) {
-                        datas.clear()
-                        datas.apply {
-                            add(RestaurantData("양식", "asfasedwf"))
-                            add(RestaurantData("양식", "ff"))
-                            add(RestaurantData("한식", "12313"))
-                        }
-
-                        restaurantAdapter.datas = datas
-                        restaurantAdapter.notifyDataSetChanged()
-                    }
-                })
-
+            restaurant_recyclerview.smoothScrollToPosition(200)
         })
         initRestaurantRecyclerView()
 
@@ -84,9 +67,36 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
 
         kakaoMap = KakaoMap(this)
         kakaoview.addView(kakaoMap)
-
     }
 
+    fun onSearchKeyword(){
+        val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val location: Location? = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        val longitude: Double = location!!.getLongitude()
+        val latitude: Double = location!!.getLatitude()
+        SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 500,
+            object : SearchKeywordCallback {
+                override fun resultCallback(result: ResultSearchKeyword?) {
+                    restaurantAdapter = RestaurantAdapter(applicationContext)
+                    restaurant_recyclerview.adapter = restaurantAdapter
+//                    restaurant_recyclerview.layoutParams.height = 50
+                    datas.clear()
+                    datas.apply {
+                        if(!result?.documents.isNullOrEmpty()){
+                            for(document in result!!.documents){
+                                val ret = document.category_name.trim().split(">")
+
+                                add(RestaurantData(ret.last(), document.place_name))
+                            }
+                        }
+                    }
+
+                    restaurantAdapter.datas = datas
+                    restaurantAdapter.notifyDataSetChanged()
+                }
+            })
+
+    }
 
     fun checkLocationServicesStatus(locationManager : LocationManager): Boolean {
         return (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -129,17 +139,7 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
     }
 
     private fun initRestaurantRecyclerView() {
-        restaurantAdapter = RestaurantAdapter(this)
-        restaurant_recyclerview.adapter = restaurantAdapter
-
-        datas.apply {
-            add(RestaurantData("양식", "파스타"))
-            add(RestaurantData("양식", "스테이크"))
-            add(RestaurantData("한식", "국밥"))
-        }
-
-        restaurantAdapter.datas = datas
-        restaurantAdapter.notifyDataSetChanged()
+        onSearchKeyword()
     }
 
     override fun onMapReady(p0: NaverMap) {

@@ -12,18 +12,25 @@ import com.nckim.whatsmenu.data.RestaurantData
 class RestaurantAdapter(private val context : Context) : RecyclerView.Adapter<RestaurantAdapter.ViewHolder>() {
 
     var datas = mutableListOf<RestaurantData>()
-
+    var itemHeight: Int = 0
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.restaurant_item_recycler, parent, false)
+//        itemHeight = view.layoutParams.height
+        itemHeight = view.measuredHeight
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(datas[position])
+        val targetIndex = if(!datas.isNullOrEmpty()){
+            position%datas.size
+        }else{
+            position
+        }
+        holder.bind(datas[targetIndex])
     }
 
     override fun getItemCount(): Int {
-        return datas.size
+        return Int.MAX_VALUE
     }
 
     inner class ViewHolder(view : View) : RecyclerView.ViewHolder(view){
