@@ -1,6 +1,7 @@
 package com.nckim.whatsmenu.adapter
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +28,12 @@ class RestaurantAdapter(private val context : Context) : RecyclerView.Adapter<Re
             position
         }
         holder.bind(datas[targetIndex])
+    }
+
+    fun print(position: Int){
+
+        val targetIndex = position%datas.size
+        Log.e("test", "position : " + position + " name : " + datas[targetIndex].restaurantName)
     }
 
     override fun getItemCount(): Int {

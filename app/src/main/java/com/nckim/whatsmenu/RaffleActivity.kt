@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.PointF
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -29,6 +30,16 @@ import com.nckim.whatsmenu.searchplace.ResultSearchKeyword
 import com.nckim.whatsmenu.searchplace.SearchKeyword
 import com.nckim.whatsmenu.searchplace.SearchKeyword.SearchKeywordCallback
 import net.daum.mf.map.api.MapView as KakaoMap
+import android.util.DisplayMetrics
+import androidx.annotation.RequiresApi
+
+import androidx.recyclerview.widget.LinearSmoothScroller
+
+import androidx.recyclerview.widget.RecyclerView
+
+import androidx.recyclerview.widget.LinearLayoutManager
+import net.daum.mf.map.api.MapPOIItem
+import net.daum.mf.map.api.MapPoint
 
 
 //import kotlinx.android.synthetic.main.activity_main.*
@@ -51,17 +62,22 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
     )
 
     private lateinit var kakaoMap : KakaoMap
+    private var mLatitude: Double = 0.0
+    private var mLongitude: Double = 0.0
 
+    @RequiresApi(Build.VERSION_CODES.P)
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_raffle)
         today_menu_textbox.setOnClickListener(View.OnClickListener {
-            restaurant_recyclerview.smoothScrollToPosition(200)
+//            restaurant_recyclerview.smoothScrollToPosition(50)
+            onSearchKeyword()
+
         })
         initRestaurantRecyclerView()
 
-        naverView = findViewById(R.id.mapview)
+        naverView = findViewById(R.id.naverview)
         naverView.onCreate(savedInstanceState)
         naverView.getMapAsync(this)
 
@@ -69,16 +85,18 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
         kakaoview.addView(kakaoMap)
     }
 
-    fun onSearchKeyword(){
+    private fun onSearchKeyword(){
         val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val location: Location? = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
         val longitude: Double = location!!.getLongitude()
         val latitude: Double = location!!.getLatitude()
+        Log.e("Test", "lati : $latitude, longi : $longitude")
         SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 500,
             object : SearchKeywordCallback {
                 override fun resultCallback(result: ResultSearchKeyword?) {
                     restaurantAdapter = RestaurantAdapter(applicationContext)
                     restaurant_recyclerview.adapter = restaurantAdapter
+                    restaurant_recyclerview.layoutManager = SpeedyLinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
 //                    restaurant_recyclerview.layoutParams.height = 50
                     datas.clear()
                     datas.apply {
@@ -93,9 +111,31 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
 
                     restaurantAdapter.datas = datas
                     restaurantAdapter.notifyDataSetChanged()
+                    restaurant_recyclerview.smoothScrollToPosition(50)
+                    updateKakaoCurrentPosition(latitude, longitude)
+
                 }
             })
+    }
 
+    fun updateKakaoCurrentPosition(latitude : Double, longitude : Double){
+        // 중심점 변경
+        kakaoMap.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true);
+
+        kakaoMap.addPOIItem(createMarker(latitude, longitude))
+        kakaoMap.addPOIItem(createMarker(latitude+0.001, longitude+0.001))
+    }
+
+    fun createMarker(latitude: Double, longitude: Double) : MapPOIItem{
+        val mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+        val marker = MapPOIItem()
+        marker.itemName = "Default Marker"
+        marker.tag = 0
+        marker.mapPoint = mapPoint
+        marker.markerType = MapPOIItem.MarkerType.BluePin // 기본으로 제공하는 BluePin 마커 모양.
+
+        marker.selectedMarkerType = MapPOIItem.MarkerType.RedPin // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+        return marker
     }
 
     fun checkLocationServicesStatus(locationManager : LocationManager): Boolean {
@@ -148,6 +188,8 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
         naverMap.locationSource = locationSource
         ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
+
+
     }
 
 
@@ -247,7 +289,41 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
     }
 
     override fun onMapClick(p0: PointF, p1: LatLng) {
+//        getRestaurant()
+    }
 
-        getRestaurant()
+    class SpeedyLinearLayoutManager : LinearLayoutManager {
+        constructor(context: Context?, orientation: Int, reverseLayout: Boolean) : super(
+            context,
+            orientation,
+            reverseLayout
+        )
+
+        override fun smoothScrollToPosition(
+            recyclerView: RecyclerView,
+            state: RecyclerView.State,
+            position: Int
+        ) {
+            val linearSmoothScroller: LinearSmoothScroller =
+                object : LinearSmoothScroller(recyclerView.context) {
+
+                    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+//                        Log.e("test", "computeScrollVectorForPosition" + targetPosition + " target : " + this.targetPosition + " position : " + position + " curpos : " + getPosition(getChildAt(0)!!))
+                        MILLISECONDS_PER_INCH += 1000 * (getPosition(getChildAt(0)!!) / targetPosition) * 100f
+                        return super.computeScrollVectorForPosition(targetPosition)
+                    }
+
+                    override fun calculateSpeedPerPixel(displayMetrics: DisplayMetrics): Float {
+//                        Log.e("test", "calculateSpeedPerPixel : " + MILLISECONDS_PER_INCH)
+                        return MILLISECONDS_PER_INCH / displayMetrics.densityDpi
+                    }
+                }
+            linearSmoothScroller.targetPosition = position
+            startSmoothScroll(linearSmoothScroller)
+        }
+
+        companion object {
+            private var MILLISECONDS_PER_INCH : Float = 100f //default is 25f (bigger = slower)
+        }
     }
 }
