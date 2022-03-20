@@ -11,3 +11,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "WhatsMenu"
 include ':app'
+include ':domain'
+include ':data'
