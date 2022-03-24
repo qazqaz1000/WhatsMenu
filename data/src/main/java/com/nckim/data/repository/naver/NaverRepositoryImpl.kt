@@ -8,7 +8,9 @@ class NaverRepositoryImpl constructor(
     private val naverDataSource: NaverDataSource
 ): NaverRepository {
     override fun getNaverPlace(query: String): Single<List<Naver>> {
-
+        return naverDataSource.getSearchNaverPlace(query).flatMap {
+            Single.just()
+        }
     }
 
 }

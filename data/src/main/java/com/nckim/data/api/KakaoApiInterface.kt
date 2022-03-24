@@ -1,5 +1,6 @@
 package com.nckim.data.api
 
+import com.nckim.data.model.kakao.KakaoResponse
 import com.nckim.domain.model.kakao.Kakao
 import io.reactivex.Single
 import retrofit2.Call
@@ -17,5 +18,5 @@ interface KakaoApiInterface {
         @Query("radius") radius : Int
         // 매개변수 추가 가능
         // @Query("category_group_code") category: String
-    ): Single<Kakao>    // 받아온 정보가 ResultSearchKeyword 클래스의 구조로 담김
+    ): Single<KakaoResponse>    // 받아온 정보가 ResultSearchKeyword 클래스의 구조로 담김
 }

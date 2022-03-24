@@ -12,6 +12,6 @@ class KakaoDataSourceImpl (
                                      x : String,
                                      y : String,
                                      radius : Int): Single<KakaoResponse> {
-        kakaoApiInterface.getSearchKakaoPlace(key, query, x, y, radius)
+        return kakaoApiInterface.getSearchKakaoPlace(key, query, x, y, radius)
     }
 }

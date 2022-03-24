@@ -1,13 +1,11 @@
 package com.nckim.data.model.kakao
 
-import com.google.gson.annotations.SerializedName
-
 // 장소명, 주소, 좌표만 받는 클래스
 data class KakaoResponse(
-    var documents: List<Place>          // 검색 결과
+    var documents: List<KakaoResponsePlace>          // 검색 결과
 )
 
-data class Place(
+data class KakaoResponsePlace(
     var place_name: String,             // 장소명, 업체명
     var category_group_name: String,
     var category_name : String,
