@@ -3,8 +3,10 @@ package com.nckim.whatsmenu
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.PointF
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -70,6 +72,8 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_raffle)
+
+        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
         today_menu_textbox.setOnClickListener(View.OnClickListener {
 //            restaurant_recyclerview.smoothScrollToPosition(50)
             onSearchKeyword()
@@ -84,38 +88,60 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
         kakaoMap = KakaoMap(this)
         kakaoview.addView(kakaoMap)
     }
+    private val locationListener = object: LocationListener
+    {
+        override fun onLocationChanged(location: Location) {
+            val longitude: Double = location!!.getLongitude()
+            val latitude: Double = location!!.getLatitude()
+            Log.e("Test", "lati : $latitude, longi : $longitude")
+            SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 500,
+                object : SearchKeywordCallback {
+                    override fun resultCallback(result: ResultSearchKeyword?) {
+                        restaurantAdapter = RestaurantAdapter(applicationContext)
+                        restaurant_recyclerview.adapter = restaurantAdapter
+                        restaurant_recyclerview.layoutManager = SpeedyLinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
+//                    restaurant_recyclerview.layoutParams.height = 50
+                        datas.clear()
+                        datas.apply {
+                            if(!result?.documents.isNullOrEmpty()){
+                                for(document in result!!.documents){
+                                    val ret = document.category_name.trim().split(">")
+
+                                    add(RestaurantData(ret.last(), document.place_name))
+                                }
+                            }
+                        }
+
+                        restaurantAdapter.datas = datas
+                        restaurantAdapter.notifyDataSetChanged()
+                        restaurant_recyclerview.smoothScrollToPosition(50)
+                        updateKakaoCurrentPosition(latitude, longitude)
+
+                    }
+                })
+        }
+    }
 
     private fun onSearchKeyword(){
         val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val location: Location? = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-        val longitude: Double = location!!.getLongitude()
-        val latitude: Double = location!!.getLatitude()
-        Log.e("Test", "lati : $latitude, longi : $longitude")
-        SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 500,
-            object : SearchKeywordCallback {
-                override fun resultCallback(result: ResultSearchKeyword?) {
-                    restaurantAdapter = RestaurantAdapter(applicationContext)
-                    restaurant_recyclerview.adapter = restaurantAdapter
-                    restaurant_recyclerview.layoutManager = SpeedyLinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
-//                    restaurant_recyclerview.layoutParams.height = 50
-                    datas.clear()
-                    datas.apply {
-                        if(!result?.documents.isNullOrEmpty()){
-                            for(document in result!!.documents){
-                                val ret = document.category_name.trim().split(">")
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            lm!!.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                3000L,
+                30f,
+                locationListener
+            )
+        }
 
-                                add(RestaurantData(ret.last(), document.place_name))
-                            }
-                        }
-                    }
 
-                    restaurantAdapter.datas = datas
-                    restaurantAdapter.notifyDataSetChanged()
-                    restaurant_recyclerview.smoothScrollToPosition(50)
-                    updateKakaoCurrentPosition(latitude, longitude)
 
-                }
-            })
     }
 
     fun updateKakaoCurrentPosition(latitude : Double, longitude : Double){
@@ -187,7 +213,7 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
 
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
         naverMap.locationSource = locationSource
-        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
+//        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
 
 
     }
@@ -223,13 +249,13 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapCl
 
         var text: String? = null
         text = try {
-            URLEncoder.encode("맛집", "UTF-8")
+            URLEncoder.encode("장한로18길 맛집", "UTF-8")
         } catch (e: UnsupportedEncodingException) {
             throw RuntimeException("검색어 인코딩 실패", e)
         }
 
         val apiURL =
-            "https://openapi.naver.com/v1/search/local.json?query=$text&display=10" // json 결과
+            "https://openapi.naver.com/v1/search/local.json?query=$text&display=10&start=2" // json 결과
 
         //String apiURL = "https://openapi.naver.com/v1/search/blog.xml?query="+ text; // xml 결과
 
