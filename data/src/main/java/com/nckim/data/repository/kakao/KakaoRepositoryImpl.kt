@@ -3,8 +3,9 @@ package com.nckim.data.repository.kakao
 import com.nckim.domain.model.kakao.KakaoPlace
 import com.nckim.domain.repository.KakaoRepository
 import io.reactivex.Single
+import javax.inject.Inject
 
-class KakaoRepositoryImpl constructor(
+class KakaoRepositoryImpl @Inject constructor(
     private val kakaoDataSource: KakaoDataSource
 ) : KakaoRepository{
     override fun getKakaoPlace(

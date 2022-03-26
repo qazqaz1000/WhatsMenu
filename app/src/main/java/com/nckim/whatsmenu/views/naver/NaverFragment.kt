@@ -12,8 +12,10 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 import com.nckim.whatsmenu.R
 import com.nckim.whatsmenu.databinding.FragmentNaverBinding
+import dagger.hilt.android.AndroidEntryPoint
+import net.daum.mf.map.api.MapView
 
-
+@AndroidEntryPoint
 class NaverFragment : Fragment(), OnMapReadyCallback {
     private val viewModel: NaverViewModel by viewModels()
     private lateinit var binding: FragmentNaverBinding
@@ -29,10 +31,27 @@ class NaverFragment : Fragment(), OnMapReadyCallback {
 //        return inflater.inflate(R.layout.fragment_naver, container, false)
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_naver, container, false)
         binding.lifecycleOwner = this
+        initView()
+        initViewModelCallBack()
         return binding.root
     }
 
+    private fun initView(){
+        binding.testButton.setOnClickListener {
+            viewModel.requestKakaoPlace("장안1동 맛집")       //현재 좌표의 (주소 맛집) 형식으로 검색
+        }
+    }
 
+    private fun initViewModelCallBack(){
+        with(viewModel){
+            places.observe(viewLifecycleOwner) {
+                var count = 0
+                places.value?.forEach {
+                    println("${count++}. ${it.title}")
+                }
+            }
+        }
+    }
 
 
 

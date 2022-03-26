@@ -4,8 +4,9 @@ import com.nckim.domain.model.naver.Naver
 import com.nckim.domain.model.naver.NaverPlace
 import com.nckim.domain.repository.NaverRepository
 import io.reactivex.Single
+import javax.inject.Inject
 
-class NaverRepositoryImpl constructor(
+class NaverRepositoryImpl @Inject constructor(
     private val naverDataSource: NaverDataSource
 ): NaverRepository {
     override fun getNaverPlace(query: String): Single<List<NaverPlace>> {

@@ -9,8 +9,10 @@ import com.nckim.whatsmenu.views.base.BaseActivity
 import com.nckim.whatsmenu.views.both.BothFragment
 import com.nckim.whatsmenu.views.kakao.KakaoFragment
 import com.nckim.whatsmenu.views.naver.NaverFragment
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_home.*
 
+@AndroidEntryPoint
 class HomeActivity : BaseActivity<ActivityHomeBinding>(R.layout.activity_home) {
     private val kakaoFragment by lazy { KakaoFragment() }
     private val naverFragment by lazy { NaverFragment() }
