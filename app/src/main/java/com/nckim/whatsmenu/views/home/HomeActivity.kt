@@ -16,9 +16,11 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(R.layout.activity_home) {
     private val naverFragment by lazy { NaverFragment() }
     private val bothFragment by lazy { BothFragment() }
 
+    private val fragments = listOf<Fragment>(kakaoFragment, naverFragment, bothFragment)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        changeFragment(kakaoFragment)
+        initFragments()
         initBottomNavigation()
     }
 
@@ -43,8 +45,20 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(R.layout.activity_home) {
         }
     }
 
+    private fun initFragments(){
+        fragments.forEach {
+            supportFragmentManager.beginTransaction().add(R.id.fragment_container, it).commit()
+        }
+        changeFragment(kakaoFragment)
+    }
 
     private fun changeFragment(fragment: Fragment) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment).commit()
+        fragments.forEach {
+            if(it == fragment){
+                supportFragmentManager.beginTransaction().show(it).commit();
+            }else{
+                supportFragmentManager.beginTransaction().hide(it).commit();
+            }
+        }
     }
 }

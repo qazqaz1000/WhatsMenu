@@ -2,25 +2,33 @@
 <layout  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#7700ff00"
         tools:context=".views.kakao.KakaoFragment">
 
-        <TextView
-            android:id="@+id/ttext"
+        <FrameLayout
+            android:id="@+id/frameLayout2"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/hello_blank_fragment" />
+            android:layout_height="@dimen/toptitle_size"
+            android:background="#77f0ff00"
+            app:layout_constraintTop_toTopOf="parent">
+            <TextView
+                android:id="@+id/title_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/title_kakao" />
+        </FrameLayout>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/hey">
+        <FrameLayout
+            android:id="@+id/kakaomapview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/frameLayout2">
 
-        </Button>
-
-    </FrameLayout>
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

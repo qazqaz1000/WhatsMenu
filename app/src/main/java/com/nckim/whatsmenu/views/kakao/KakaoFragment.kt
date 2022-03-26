@@ -9,11 +9,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.viewModels
 import com.nckim.whatsmenu.R
 import com.nckim.whatsmenu.databinding.FragmentKakaoBinding
+import kotlinx.android.synthetic.main.activity_raffle.*
+import net.daum.mf.map.api.MapView
 
 class KakaoFragment : Fragment() {
 
     private val viewModel: KakaoViewModel by viewModels()
     private lateinit var binding: FragmentKakaoBinding
+
+    private lateinit var kakaoMap : MapView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -26,8 +30,7 @@ class KakaoFragment : Fragment() {
     }
 
     private fun initView(){
-        binding.hey.setOnClickListener {
-            binding.ttext.text = viewModel.query.value.toString()
-        }
+        kakaoMap = MapView(activity)
+        binding.kakaomapview.addView(kakaoMap)
     }
 }
