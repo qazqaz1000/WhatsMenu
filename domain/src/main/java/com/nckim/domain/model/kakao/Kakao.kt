@@ -2,10 +2,10 @@ package com.nckim.domain.model.kakao
 
 data class Kakao (
 // 장소명, 주소, 좌표만 받는 클래스
-    var documents: List<Place>          // 검색 결과
+    var documents: List<KakaoPlace>          // 검색 결과
 )
 
-data class Place(
+data class KakaoPlace(
     var place_name: String,             // 장소명, 업체명
     var category_group_name: String,
     var category_name : String,

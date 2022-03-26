@@ -1,7 +1,6 @@
 package com.nckim.data.repository.kakao
 
-import com.nckim.data.model.kakao.KakaoResponse
-import com.nckim.domain.model.kakao.Place
+import com.nckim.domain.model.kakao.KakaoPlace
 import com.nckim.domain.repository.KakaoRepository
 import io.reactivex.Single
 
@@ -14,10 +13,10 @@ class KakaoRepositoryImpl constructor(
         x: String,
         y: String,
         radius: Int
-    ): Single<List<Place>> {
+    ): Single<List<KakaoPlace>> {
         return kakaoDataSource.getSearchKakaoPlace(key, query, x, y, radius).flatMap {
             Single.just(it.documents.toList().map {
-                Place(
+                KakaoPlace(
                     it.place_name,
                     it.category_group_name,
                     it.category_name,
