@@ -2,4 +2,11 @@
     <string name="app_name">WhatsMenu</string>
     <string name="topview_text">오늘 뭐 먹지?</string>
     <string name="topview_today_menu">오늘의 메뉴</string>
+
+
+    <string name="bottom_naver">네이버</string>
+    <string name="bottom_kakao">카카오</string>
+    <string name="bottom_both">둘다</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

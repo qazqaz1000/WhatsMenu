@@ -1,4 +1,6 @@
 package com.nckim.whatsmenu.views.both
 
-class BothViewModel {
+import androidx.lifecycle.ViewModel
+
+class BothViewModel : ViewModel(){
 }

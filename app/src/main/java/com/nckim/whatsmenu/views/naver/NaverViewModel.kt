@@ -1,4 +1,6 @@
 package com.nckim.whatsmenu.views.naver
 
-class NaverViewModel {
+import androidx.lifecycle.ViewModel
+
+class NaverViewModel : ViewModel(){
 }
