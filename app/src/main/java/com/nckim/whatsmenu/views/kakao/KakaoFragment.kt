@@ -21,7 +21,10 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.nckim.whatsmenu.R
 import com.nckim.whatsmenu.databinding.FragmentKakaoBinding
+import com.nckim.whatsmenu.views.home.HomeActivity
 import dagger.hilt.android.AndroidEntryPoint
+import net.daum.mf.map.api.MapPOIItem
+import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
 import java.io.IOException
 import java.util.*
@@ -35,9 +38,9 @@ class KakaoFragment : Fragment() {
 
     private var kakaoMap : MapView? = null
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-    val PERMISSIONS_REQUEST_CODE = 100
+    private var curLat = ""
+    private var curLon = ""
+
 
 
     override fun onCreateView(
@@ -49,7 +52,6 @@ class KakaoFragment : Fragment() {
         ct = container!!.context
         initView()
         initViewModelCallBack()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(ct)
 
         return binding.root
     }
@@ -59,13 +61,9 @@ class KakaoFragment : Fragment() {
             kakaoMap = MapView(activity)
             binding.kakaomapview.addView(kakaoMap)
         }
-
-
         binding.testButton.setOnClickListener {
-            viewModel.requestKakaoPlace("127.072793", "37.567312")      //현재 좌표 (경도 위도)로 검색
             getCurrentLocation()
-
-
+            viewModel.requestKakaoPlace(curLat, curLon)      //현재 좌표 (경도 위도)로 검색
         }
     }
 
@@ -75,30 +73,27 @@ class KakaoFragment : Fragment() {
                 var count = 0
                 places.value?.forEach {
                     println("${count++}. ${it.place_name}")
+                    addMarker(it.place_name, it.y.toDouble(), it.x.toDouble())
                 }
             }
         }
     }
 
-
     private fun getCurrentLocation(){
-
-        var hasFineLocationPermission = ContextCompat.checkSelfPermission(ct,
-            Manifest.permission.ACCESS_FINE_LOCATION)
-        var hasCoarseLocationPermission = ContextCompat.checkSelfPermission(ct,
-            Manifest.permission.ACCESS_COARSE_LOCATION)
-
-        if(hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
-            hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED){
-            fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? -> // Got last known location. In some rare situations this can be null.
-
+        val act = activity as HomeActivity
+        if(act != null){
+            act.getCurrentLocation { location ->
                 var latitude = 0.0
                 var longitude = 0.0
                 if(location != null){
                     latitude = location.latitude
                     longitude = location.longitude
+                    curLat = latitude.toString()
+                    curLon = longitude.toString()
                     Log.d("CheckCurrentLocation", "현재 내 위치 값: ${latitude}, ${longitude}")
                     Toast.makeText(ct, "현재 내 위치 값: ${latitude}, ${longitude}", Toast.LENGTH_SHORT).show()
+
+                    updateKakaoCurrentPosition(latitude, longitude)
 
                     var mGeoCoder =  Geocoder(ct, Locale.KOREAN)
                     var mResultList: List<Address>? = null
@@ -115,15 +110,28 @@ class KakaoFragment : Fragment() {
                     }
                 }
             }
-
-        }else{
-            if(ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), REQUIRED_PERMISSIONS[0])){
-                Toast.makeText(ct, "앱을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(requireActivity(), REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
-            }else{
-                ActivityCompat.requestPermissions(requireActivity(), REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
-            }
         }
     }
 
+    fun updateKakaoCurrentPosition(latitude : Double, longitude : Double){
+        // 중심점 변경
+        kakaoMap?.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true);
+
+    }
+
+    fun addMarker(name: String, latitude: Double, longitude: Double) {
+        kakaoMap?.addPOIItem(createMarker(name, latitude, longitude))
+    }
+
+    fun createMarker(name: String, latitude: Double, longitude: Double) : MapPOIItem {
+        val mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+        val marker = MapPOIItem()
+        marker.itemName = name
+        marker.tag = 0
+        marker.mapPoint = mapPoint
+        marker.markerType = MapPOIItem.MarkerType.BluePin // 기본으로 제공하는 BluePin 마커 모양.
+
+        marker.selectedMarkerType = MapPOIItem.MarkerType.RedPin // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+        return marker
+    }
 }

@@ -32,7 +32,7 @@ class KakaoViewModel @Inject constructor(
         x: String,
         y: String){
         compositeDisposable.add(
-            kakaoPlaceUseCase.invoke(ApiClient.KAKAO_API_KEY,"맛집","127.072793", "37.567312", 500)
+            kakaoPlaceUseCase.invoke(ApiClient.KAKAO_API_KEY,"맛집",y, x, 500)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ places ->
