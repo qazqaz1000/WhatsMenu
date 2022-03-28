@@ -11,7 +11,7 @@
             android:id="@+id/frameLayout2"
             android:layout_width="match_parent"
             android:layout_height="@dimen/toptitle_size"
-            android:background="#77f0ff00"
+            android:background="#CDBC24"
             app:layout_constraintTop_toTopOf="parent">
             <TextView
                 android:id="@+id/title_text"
@@ -21,10 +21,11 @@
                 android:text="@string/title_kakao" />
             <Button
                 android:id="@+id/test_button"
-                android:text="테스트"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right"/>
+                android:background="@drawable/location"
+                android:layout_marginRight="@dimen/button_margin"
+                android:layout_width="@dimen/button_size"
+                android:layout_height="@dimen/button_size"
+                android:layout_gravity="right|center"/>
         </FrameLayout>
 
         <FrameLayout
