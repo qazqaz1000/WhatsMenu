@@ -1,38 +1,58 @@
 package com.nckim.whatsmenu
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.PointF
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
 import com.nckim.whatsmenu.adapter.RestaurantAdapter
 import com.nckim.whatsmenu.data.RestaurantData
 import kotlinx.android.synthetic.main.activity_raffle.*
-import java.util.concurrent.TimeUnit
 import com.naver.maps.map.util.FusedLocationSource
+import java.io.*
+import java.lang.RuntimeException
+import java.lang.StringBuilder
+import java.net.HttpURLConnection
+import java.net.MalformedURLException
+import java.net.URL
+import java.net.URLEncoder
+import android.os.StrictMode
+import android.view.View
+import com.nckim.whatsmenu.searchplace.ResultSearchKeyword
+import com.nckim.whatsmenu.searchplace.SearchKeyword
+import com.nckim.whatsmenu.searchplace.SearchKeyword.SearchKeywordCallback
+import net.daum.mf.map.api.MapView as KakaoMap
+import android.util.DisplayMetrics
+import androidx.annotation.RequiresApi
 
+import androidx.recyclerview.widget.LinearSmoothScroller
 
+import androidx.recyclerview.widget.RecyclerView
+
+import androidx.recyclerview.widget.LinearLayoutManager
+import net.daum.mf.map.api.MapPOIItem
+import net.daum.mf.map.api.MapPoint
 
 
 //import kotlinx.android.synthetic.main.activity_main.*
 
-class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener{
-    private lateinit var mapView: MapView
+class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, NaverMap.OnMapClickListener{
+
+    private lateinit var naverView: MapView
     private lateinit var naverMap : NaverMap
 
     lateinit var  restaurantAdapter : RestaurantAdapter
     val datas = mutableListOf<RestaurantData>()
-
-    private var mLatitude: Double = 0.0
-    private var mLongitude: Double = 0.0
 
     private var locationSource: FusedLocationSource? = null
 
@@ -43,22 +63,67 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private lateinit var kakaoMap : KakaoMap
+    private var mLatitude: Double = 0.0
+    private var mLongitude: Double = 0.0
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_raffle)
 
+        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
+        today_menu_textbox.setOnClickListener(View.OnClickListener {
+//            restaurant_recyclerview.smoothScrollToPosition(50)
+            onSearchKeyword()
+
+        })
         initRestaurantRecyclerView()
 
-        mapView = findViewById(R.id.mapview)
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
+        naverView = findViewById(R.id.naverview)
+        naverView.onCreate(savedInstanceState)
+        naverView.getMapAsync(this)
 
+        kakaoMap = KakaoMap(this)
+        kakaoview.addView(kakaoMap)
+    }
+    private val locationListener = object: LocationListener
+    {
+        override fun onLocationChanged(location: Location) {
+            val longitude: Double = location!!.getLongitude()
+            val latitude: Double = location!!.getLatitude()
+            Log.e("Test", "lati : $latitude, longi : $longitude")
+            SearchKeyword.searchKeyword("맛집", longitude.toBigDecimal().toPlainString(), latitude.toBigDecimal().toPlainString(), 500,
+                object : SearchKeywordCallback {
+                    override fun resultCallback(result: ResultSearchKeyword?) {
+                        restaurantAdapter = RestaurantAdapter(applicationContext)
+                        restaurant_recyclerview.adapter = restaurantAdapter
+                        restaurant_recyclerview.layoutManager = SpeedyLinearLayoutManager(applicationContext, LinearLayoutManager.VERTICAL, false)
+//                    restaurant_recyclerview.layoutParams.height = 50
+                        datas.clear()
+                        datas.apply {
+                            if(!result?.documents.isNullOrEmpty()){
+                                for(document in result!!.documents){
+                                    val ret = document.category_name.trim().split(">")
+
+                                    add(RestaurantData(ret.last(), document.place_name))
+                                }
+                            }
+                        }
+
+                        restaurantAdapter.datas = datas
+                        restaurantAdapter.notifyDataSetChanged()
+                        restaurant_recyclerview.smoothScrollToPosition(50)
+                        updateKakaoCurrentPosition(latitude, longitude)
+
+                    }
+                })
+        }
     }
 
-    fun updateLatLng(){
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-
-
+    private fun onSearchKeyword(){
+        val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -67,50 +132,37 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            return
-        }
-//        locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-
-        var gpsListener: LocationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                val latitude = location.latitude
-                val longitude = location.longitude
-                Log.d("Test2", "GPS Location changed, Latitude: $latitude" +
-                        ", Longitude: $longitude")
-            }
-
-            override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
-                Log.d("Test","d")
-            }
-            override fun onProviderEnabled(provider: String) {
-                Log.d("Test","f")
-            }
-            override fun onProviderDisabled(provider: String) {
-                Log.d("Test","65")
-            }
-        }
-
-
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10L, 1000* 60.0f, gpsListener)
-        if (checkLocationServicesStatus(locationManager)) {
-            val location: Location? =
-                locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            val ageMs = TimeUnit.NANOSECONDS.toMillis(
-                SystemClock.elapsedRealtimeNanos()
-                    - (location?.getElapsedRealtimeNanos() ?: 0)
+            lm!!.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                3000L,
+                30f,
+                locationListener
             )
-            Log.d("Test", "age : " + ageMs)
-            if (location != null) {
-                mLatitude = location.latitude
-                mLongitude = location.longitude
-                Log.d(
-                    "Test", "GPS Location changed, Latitude: $mLatitude" +
-                            ", Longitude: $mLongitude"
-                )
-            }
         }
+
+
+
     }
 
+    fun updateKakaoCurrentPosition(latitude : Double, longitude : Double){
+        // 중심점 변경
+        kakaoMap.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true);
+
+        kakaoMap.addPOIItem(createMarker(latitude, longitude))
+        kakaoMap.addPOIItem(createMarker(latitude+0.001, longitude+0.001))
+    }
+
+    fun createMarker(latitude: Double, longitude: Double) : MapPOIItem{
+        val mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+        val marker = MapPOIItem()
+        marker.itemName = "Default Marker"
+        marker.tag = 0
+        marker.mapPoint = mapPoint
+        marker.markerType = MapPOIItem.MarkerType.BluePin // 기본으로 제공하는 BluePin 마커 모양.
+
+        marker.selectedMarkerType = MapPOIItem.MarkerType.RedPin // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+        return marker
+    }
 
     fun checkLocationServicesStatus(locationManager : LocationManager): Boolean {
         return (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -119,71 +171,54 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
 
     override fun onStart() {
         super.onStart()
-        mapView.onStart()
+        naverView.onStart()
     }
 
     override fun onResume() {
         super.onResume()
-        mapView.onResume()
+        naverView.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        mapView.onPause()
+        naverView.onPause()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        mapView.onSaveInstanceState(outState)
+        naverView.onSaveInstanceState(outState)
     }
 
     override fun onStop() {
         super.onStop()
-        mapView.onStop()
+        naverView.onStop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mapView.onDestroy()
+        naverView.onDestroy()
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        mapView.onLowMemory()
+        naverView.onLowMemory()
     }
 
     private fun initRestaurantRecyclerView() {
-        restaurantAdapter = RestaurantAdapter(this)
-        restaurant_recyclerview.adapter = restaurantAdapter
-
-        datas.apply {
-            add(RestaurantData("양식", "파스타"))
-            add(RestaurantData("양식", "스테이크"))
-            add(RestaurantData("한식", "국밥"))
-        }
-
-        restaurantAdapter.datas = datas
-        restaurantAdapter.notifyDataSetChanged()
+        onSearchKeyword()
     }
 
     override fun onMapReady(p0: NaverMap) {
         this.naverMap = p0
 
-        updateLatLng()
-//        val cameraPosition = CameraPosition(LatLng(mLatitude, mLongitude), 16.0)
-//        naverMap.cameraPosition=cameraPosition
-        locationSource = FusedLocationSource(this, 1001)
+        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
         naverMap.locationSource = locationSource
-        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
-    }
+//        ActivityCompat.requestPermissions(this, PERMISSIONS, LOCATION_PERMISSION_REQUEST_CODE);
 
-    override fun onLocationChanged(p0: Location) {
-        Log.d(
-            "Test2", "GPS Location changed, Latitude: ${p0.latitude}" +
-                    ", Longitude: ${p0.longitude}"
-        )
 
     }
+
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -199,8 +234,122 @@ class RaffleActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener
             }
 
         }
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
+        getRestaurant()
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
     }
 
+    private fun getRestaurant(){
+        val clientId = "ZdiaeLQbLVaYAQODPAUH" //애플리케이션 클라이언트 아이디값"
+
+        val clientSecret = "vY8uGx7Sqm" //애플리케이션 클라이언트 시크릿값"
+
+
+        var text: String? = null
+        text = try {
+            URLEncoder.encode("장한로18길 맛집", "UTF-8")
+        } catch (e: UnsupportedEncodingException) {
+            throw RuntimeException("검색어 인코딩 실패", e)
+        }
+
+        val apiURL =
+            "https://openapi.naver.com/v1/search/local.json?query=$text&display=10&start=2" // json 결과
+
+        //String apiURL = "https://openapi.naver.com/v1/search/blog.xml?query="+ text; // xml 결과
+
+        //String apiURL = "https://openapi.naver.com/v1/search/blog.xml?query="+ text; // xml 결과
+        val requestHeaders: MutableMap<String, String> = HashMap()
+        requestHeaders["X-Naver-Client-Id"] = clientId
+        requestHeaders["X-Naver-Client-Secret"] = clientSecret
+        val responseBody = get(apiURL, requestHeaders)
+        Log.d("Test", "result : " + responseBody);
+    }
+
+    private operator fun get(apiUrl: String, requestHeaders: Map<String, String>): String? {
+        val con: HttpURLConnection = connect(apiUrl)
+        return try {
+            con.setRequestMethod("GET")
+            for ((key, value) in requestHeaders) {
+                con.setRequestProperty(key, value)
+            }
+            val responseCode: Int = con.getResponseCode()
+            if (responseCode == HttpURLConnection.HTTP_OK) { // 정상 호출
+                readBody(con.getInputStream())
+            } else { // 에러 발생
+                readBody(con.getErrorStream())
+            }
+        } catch (e: IOException) {
+            throw RuntimeException("API 요청과 응답 실패", e)
+        } finally {
+            con.disconnect()
+        }
+    }
+
+    private fun connect(apiUrl: String): HttpURLConnection {
+        return try {
+            val url = URL(apiUrl)
+            url.openConnection() as HttpURLConnection
+        } catch (e: MalformedURLException) {
+            throw RuntimeException("API URL이 잘못되었습니다. : $apiUrl", e)
+        } catch (e: IOException) {
+            throw RuntimeException("연결이 실패했습니다. : $apiUrl", e)
+        }
+    }
+
+    private fun readBody(body: InputStream): String? {
+        val streamReader = InputStreamReader(body)
+        try {
+            BufferedReader(streamReader).use { lineReader ->
+                val responseBody = StringBuilder()
+                var line: String?
+                while (lineReader.readLine().also { line = it } != null) {
+                    responseBody.append(line)
+                }
+                return responseBody.toString()
+            }
+        } catch (e: IOException) {
+            throw RuntimeException("API 응답을 읽는데 실패했습니다.", e)
+        }
+    }
+
+    override fun onMapClick(p0: PointF, p1: LatLng) {
+//        getRestaurant()
+    }
+
+    class SpeedyLinearLayoutManager : LinearLayoutManager {
+        constructor(context: Context?, orientation: Int, reverseLayout: Boolean) : super(
+            context,
+            orientation,
+            reverseLayout
+        )
+
+        override fun smoothScrollToPosition(
+            recyclerView: RecyclerView,
+            state: RecyclerView.State,
+            position: Int
+        ) {
+            val linearSmoothScroller: LinearSmoothScroller =
+                object : LinearSmoothScroller(recyclerView.context) {
+
+                    override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+//                        Log.e("test", "computeScrollVectorForPosition" + targetPosition + " target : " + this.targetPosition + " position : " + position + " curpos : " + getPosition(getChildAt(0)!!))
+                        MILLISECONDS_PER_INCH += 1000 * (getPosition(getChildAt(0)!!) / targetPosition) * 100f
+                        return super.computeScrollVectorForPosition(targetPosition)
+                    }
+
+                    override fun calculateSpeedPerPixel(displayMetrics: DisplayMetrics): Float {
+//                        Log.e("test", "calculateSpeedPerPixel : " + MILLISECONDS_PER_INCH)
+                        return MILLISECONDS_PER_INCH / displayMetrics.densityDpi
+                    }
+                }
+            linearSmoothScroller.targetPosition = position
+            startSmoothScroll(linearSmoothScroller)
+        }
+
+        companion object {
+            private var MILLISECONDS_PER_INCH : Float = 100f //default is 25f (bigger = slower)
+        }
+    }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="textview_margin">30dp</dimen>
+    <dimen name="toptitle_size">50dp</dimen>
+    <dimen name="button_size">30dp</dimen>
+    <dimen name="button_margin">15dp</dimen>
+</resources>
