@@ -12,38 +12,31 @@ import com.nckim.whatsmenu.views.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 @HiltViewModel
 class NaverViewModel @Inject constructor(
     private val naverPlaceUseCase: GetNaverPlaceUseCase
 ): BaseViewModel(){
+    private val job = Job()
+    private val viewModelScope = CoroutineScope(Dispatchers.Main + job)
+
     private val _places = MutableLiveData<MutableList<NaverPlace>>()
     val places : LiveData<MutableList<NaverPlace>>
         get(){
         return _places
     }
 
-    fun requestKakaoPlace(query: String){
-        compositeDisposable.add(
-            naverPlaceUseCase.invoke(query)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ places ->
-                    if(places.isEmpty()){
-                        Log.e("NCTEST", "######## fail")
-                        //fail
-                    }else{
-                        _places.value = places as ArrayList<NaverPlace>
 
-                        Log.e("NCTEST", "######## succes")
-                    }
-                }, {
-                    //fail
+    fun requestNaverPlace(query: String){
+        viewModelScope.launch(Dispatchers.IO) {
+            _places.postValue( naverPlaceUseCase.invoke(query) as ArrayList<NaverPlace>)
+        }
+    }
 
-                    Log.e("NCTEST", "######## fail " + it.message)
-                })
-        )
-
+    override fun onCleared() {
+        super.onCleared()
+        job.cancel()
     }
 }

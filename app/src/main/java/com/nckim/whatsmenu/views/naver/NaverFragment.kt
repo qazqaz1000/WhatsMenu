@@ -1,7 +1,6 @@
 package com.nckim.whatsmenu.views.naver
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,6 @@ import com.naver.maps.map.OnMapReadyCallback
 import com.nckim.whatsmenu.R
 import com.nckim.whatsmenu.databinding.FragmentNaverBinding
 import dagger.hilt.android.AndroidEntryPoint
-import net.daum.mf.map.api.MapView
 
 @AndroidEntryPoint
 class NaverFragment : Fragment(), OnMapReadyCallback {
@@ -38,7 +36,7 @@ class NaverFragment : Fragment(), OnMapReadyCallback {
 
     private fun initView(){
         binding.testButton.setOnClickListener {
-            viewModel.requestKakaoPlace("장안1동 맛집")       //현재 좌표의 (주소 맛집) 형식으로 검색
+            viewModel.requestNaverPlace("장안1동 맛집")       //현재 좌표의 (주소 맛집) 형식으로 검색
         }
     }
 

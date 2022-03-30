@@ -17,11 +17,11 @@ import retrofit2.http.Query
 
 interface NaverApiInterface {
     @GET("v1/search/local.json")
-    fun getSearchNaverPlace(
+    suspend fun getSearchNaverPlace(
         @Query("query") query: String,
         @Query("display") display : Int = 5,
         @Query("start") start : Int = 1
-    ): Single<NaverResponse>
+    ): NaverResponse
 
 
     companion object{

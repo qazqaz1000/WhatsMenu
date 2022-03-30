@@ -9,9 +9,8 @@ import javax.inject.Inject
 class NaverRepositoryImpl @Inject constructor(
     private val naverDataSource: NaverDataSource
 ): NaverRepository {
-    override fun getNaverPlace(query: String): Single<List<NaverPlace>> {
-        return naverDataSource.getSearchNaverPlace(query).flatMap {
-            Single.just(it.items.toList().map {
+    override suspend fun getNaverPlace(query: String): List<NaverPlace> {
+        return naverDataSource.getSearchNaverPlace(query).items.toList().map {
                 NaverPlace(
                     it.title,
                     it.link,
@@ -20,8 +19,6 @@ class NaverRepositoryImpl @Inject constructor(
                     it.mapx,
                     it.mapy
                 )
-            })
         }
     }
-
 }

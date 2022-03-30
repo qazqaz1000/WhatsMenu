@@ -9,5 +9,5 @@ import javax.inject.Inject
 class GetNaverPlaceUseCase @Inject constructor(
      private val naverRepository: NaverRepository
 ){
-    fun invoke(query: String): Single<List<NaverPlace>> = naverRepository.getNaverPlace(query)
+    suspend fun invoke(query: String): List<NaverPlace> = naverRepository.getNaverPlace(query)
 }

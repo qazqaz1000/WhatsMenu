@@ -108,7 +108,7 @@ class KakaoFragment : Fragment() , MapViewEventListener{
         }catch(e: IOException){
             e.printStackTrace()
         }
-        if(mResultList != null){
+        if(mResultList != null && mResultList.size > 0){
             Log.d("CheckCurrentLocation", mResultList[0].getAddressLine(0))
             Toast.makeText(ct, mResultList[0].getAddressLine(0), Toast.LENGTH_SHORT).show()
         }
@@ -169,6 +169,6 @@ class KakaoFragment : Fragment() , MapViewEventListener{
 
     override fun onMapViewMoveFinished(p0: MapView?, p1: MapPoint?) {
         viewModel.requestKakaoPlace(curLat, curLon)
-        updateMapPosition(curLat.toDouble(), curLon.toDouble())
+        updateMapPosition(curLat?.toDouble(), curLon?.toDouble())
     }
 }

@@ -8,7 +8,7 @@ import javax.inject.Inject
 class NaverDataSourceImpl @Inject constructor(
     private val naverApiInterface: NaverApiInterface
         ): NaverDataSource {
-    override fun getSearchNaverPlace(query: String): Single<NaverResponse> {
+    override suspend fun getSearchNaverPlace(query: String): NaverResponse {
          return naverApiInterface.getSearchNaverPlace(query)
     }
 }

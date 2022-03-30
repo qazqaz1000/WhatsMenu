@@ -5,5 +5,5 @@ import com.nckim.domain.model.naver.NaverPlace
 import io.reactivex.Single
 
 interface NaverRepository {
-    fun getNaverPlace(query: String): Single<List<NaverPlace>>
+    suspend fun getNaverPlace(query: String): List<NaverPlace>
 }
